@@ -1,0 +1,62 @@
+body {
+  display: flex;
+  flex-direction: column;
+  width: 100px;
+  margin-top: 0;
+  padding: 6px;
+  background-color:lightslategray;
+}
+
+.header {
+  text-align: center;
+  color: whitesmoke;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: column;
+  border: none;
+  gap: 4px;
+}
+
+button {
+  background-color: #00224B;
+  border-radius: 6px;
+  font-weight: bold;
+  color: whitesmoke;
+}
+
+.inputTextModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50px, -75%) scale(0);
+  transition: 200ms ease-in-out;
+  border: 1px solid black;
+  border-radius: 6px;
+  z-index: 10;
+  background-color: white;
+  width: 50px;
+}
+
+.inputTextModal.visible {
+  transform: translate(-50px, -75%) scale(1);
+}
+
+#overlay {
+  position: fixed;
+  opacity: 0;
+  transition: 200ms ease-in-out;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 2;
+}
+
+#overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}

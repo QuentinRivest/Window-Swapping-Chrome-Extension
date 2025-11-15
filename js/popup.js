@@ -8,10 +8,41 @@
   //  when multiple Chrome windows are open.
   // Then, of course, if the window is not a saved window, then the extension
   //  would have to create a new window in storage.
+//
+
+const input_text_modal = document.getElementById("inputTextModal");
+const input_textbox    = document.getElementById("inputTextbox")
+const overlay          = document.getElementById("overlay");
 
 const save_current_window_btn = document.getElementById("saveCurrentWindowBtn");
 const swap_with_btn           = document.getElementById("swapWithBtn");
 const open_saved_window_btn   = document.getElementById("openSavedWindowBtn");
+
+function openModal(modal) {
+  if (modal == null) return;
+
+  overlay.classList.add("visible");
+  modal.classList.add("visible");
+}
+
+function closeModal(modal) {
+  if (modal == null) return;
+
+  modal.classList.remove("visible");
+  overlay.classList.remove("visible");
+}
+
+function waitForEnterKey() {
+  return new Promise((resolve) => {
+    function enterKeyHandler(event) {
+      if (event.code == "Enter") {
+        document.removeEventListener("keydown", enterKeyHandler);
+        resolve();
+      }
+    }
+    document.addEventListener("keydown", enterKeyHandler);
+  })
+}
 
 async function saveCurrentWindow() {
   console.log("Saving window...");
@@ -24,27 +55,42 @@ async function saveCurrentWindow() {
   }
 
   const current_window_id = (await chrome.windows.getCurrent()).id.toString();
-  let window_name         = "NEW WINDOW";
 
-  console.log("About to get current window id.");
-  chrome.storage.sync.get([current_window_id]).then((data) => {
-    console.log("Getting current window id...");
+  // Get the name of the window with the current window ID, if it exists.
+  console.log("Getting current window id...");
+  const window_names_data = await chrome.storage.sync.get([current_window_id]);
+  const saved_window_name = window_names_data[current_window_id];
+  const windows_data      = await chrome.storage.sync.get("windows");
+  let   windows_data_obj  = windows_data.windows || {};
 
-    const saved_window_name = data.current_window_id;
-    if (saved_window_name !== undefined) {
-      console.log("(saving " + saved_window_name + ")");
-      window_name = saved_window_name;
-    } else {
-      console.log("Storing " + current_window_id + " with " + window_name + ".");
+  // Save (or update, if it was already a saved window in the first place) the
+  //  current window with the correct data (array of current tab URLs).
+  if (saved_window_name === undefined) {  // Current window does NOT map to saved window.
+    // Get user input from input modal for name of window.
 
-      // TODO: Allow user to set name for new saved window.
-      chrome.storage.sync.set({[current_window_id] : window_name});
-    }
-  })
-  chrome.storage.sync.set({"windows" : {[window_name] : tab_urls}});
+    // Clear any previous input.
+    input_textbox.value = "";
+    openModal(input_text_modal);
+    input_textbox.focus();
+    // TODO: Add safety against duplicate window names.
+    await waitForEnterKey();
+    let window_name = input_textbox.value;
+    closeModal(input_text_modal);
+
+    // Map current window's ID to the saved window name.
+    chrome.storage.sync.set({[current_window_id] : window_name});
+    // Save the window data.
+    windows_data_obj[window_name] = tab_urls;
+    chrome.storage.sync.set({"windows" : windows_data_obj});
+  } else {  // Current window DOES map to saved window.
+    console.log("(updating " + saved_window_name + ")");
+    // Update saved window data.
+    windows_data_obj[saved_window_name] = tab_urls;
+    chrome.storage.sync.set({"windows" : windows_data_obj});
+  }
 }
 
-async function openSavedWindow() {
+function openSavedWindow() {
   console.log("Opening saved window...")
 
   // Open a new window.

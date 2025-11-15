@@ -1,15 +1,25 @@
 <html>
+  <head>
+    <link href="../css/popup.css" rel="stylesheet">
+  </head>
   <body>
-    <h1>Hello Extensions</h1>
-    <button id="saveCurrentWindowBtn">
-      Save This Window
-    </button>
-    <button id="openSavedWindowBtn">
-      Open Saved Window...
-    </button>
-    <button id="swapWithBtn">
-      Swap With...
-    </button>
+    <h1 class="header">Window Swapper</h1>
+    <div class="buttons">
+      <button id="saveCurrentWindowBtn" data-modal-target="#inputTextModal">
+        Save
+      </button>
+      <button id="openSavedWindowBtn">Open...</button>
+      <button id="swapWithBtn">Swap With...</button>
+    </div>
+    <div class="inputTextModal" id="inputTextModal">
+      <input
+        id="inputTextbox"
+        type="text"
+        placeholder="Enter window name"
+        height="200px"
+      >
+    </div>
+    <div id="overlay"></div>
     <script src="../js/popup.js"></script>
   </body>
 </html>
