@@ -3,23 +3,39 @@
     <link href="../css/popup.css" rel="stylesheet">
   </head>
   <body>
-    <h1 class="header">Window Swapper</h1>
-    <div class="buttons">
-      <button id="saveCurrentWindowBtn" data-modal-target="#inputTextModal">
-        Save
-      </button>
-      <button id="openSavedWindowBtn">Open...</button>
-      <button id="swapWithBtn">Swap With...</button>
-    </div>
-    <div class="inputTextModal" id="inputTextModal">
+    <div id="inputTextModal">
       <input
         id="inputTextbox"
         type="text"
         placeholder="Enter window name"
-        height="200px"
       >
     </div>
+    <div id="windowSelectModal">
+      <div class="window-select-header">
+        <h3>Windows</h3>
+        <button
+          class="close-window-select-modal-btn"
+          id="closeWindowSelectModalBtn"
+        >
+          &times;
+        </button>
+      </div>
+      <div
+        class="window-select-options-container"
+        id="windowSelectOptionsContainer"
+      >
+        <!-- buttons -->
+      </div>
+    </div>
     <div id="overlay"></div>
+    <div class="main-menu">
+      <h1 class="header">Window Swapper</h1>
+      <div class="menu-btns-container">
+        <button class="menu-btn" id="saveCurrentWindowBtn">Save</button>
+        <button class="menu-btn" id="openSavedWindowBtn">Open...</button>
+        <button class="menu-btn" id="swapWithBtn">Swap With...</button>
+      </div>
+    </div>
     <script src="../js/popup.js"></script>
   </body>
 </html>
