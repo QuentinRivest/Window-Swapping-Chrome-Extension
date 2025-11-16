@@ -117,13 +117,17 @@ async function openSavedWindow() {
   console.log("There are " + window_option_btns.length + " windows in storage.");
   for (const window_option_btn of window_option_btns) {
     console.log("Adding event listener to " + window_option_btn.id + "...");
-    window_option_btn.addEventListener("click", () => {
+    window_option_btn.addEventListener("click", async () => {
       console.log(window_option_btn.id + " was clicked! :D");
 
       closeModal(window_select_modal);
 
-      const tab_urls_to_open = windows_data_obj[window_option_btn.id];
-      chrome.windows.create({url : tab_urls_to_open});
+      const window_name = window_option_btn.id;
+      const tab_urls    = windows_data_obj[window_name];
+      const new_window  = await chrome.windows.create({url:   tab_urls,
+                                                       state: "maximized"});
+
+      chrome.storage.sync.set({[new_window.id] : window_name});
     });
   }
 
