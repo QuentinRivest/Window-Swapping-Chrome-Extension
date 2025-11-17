@@ -1,59 +1,49 @@
-// If a saved window is open along with a bunch of not-saved windows, there
-//  needs to be a way to differentiate it from the non-saved windows, as the
-//  behavior is rather different.
-  // If the window being saved/swapped exists, then it that window's data needs
-  //  to be updated, but between the time it was loaded and when it's saved
-  //  again, it could've completely changed (could have no tabs in common).
-  //  Maybe there's a unique identifier that a window has for differentiating
-  //  when multiple Chrome windows are open.
-  // Then, of course, if the window is not a saved window, then the extension
-  //  would have to create a new window in storage.
-//
+/*
+* - If a saved window is open along with a bunch of not-saved windows, there
+*   needs to be a way to differentiate it from the non-saved windows, as the
+*   behavior is rather different.
+* - If the window being saved/swapped exists, then it that window's data needs
+*   to be updated, but between the time it was loaded and when it's saved
+*   again, it could've completely changed (could have no tabs in common).
+*   - Maybe there's a unique identifier that a window has for differentiating
+*     when multiple Chrome windows are open.
+*   - Then, of course, if the window is not a saved window, then the extension
+*     would have to create a new window in storage.
+*/
+import * as Helpers from "./popup-helpers.js"
 
-// Elements for saving a window.
+
+
+/*** HTML ELEMENTS ***/
+
+// Elements for saving the current window.
 const save_current_window_btn = document.getElementById("saveCurrentWindowBtn");
 const input_text_modal        = document.getElementById("inputTextModal");
 const input_textbox           = document.getElementById("inputTextbox");
-const overlay                 = document.getElementById("overlay");
 
 // Elements for opening a saved window.
 const open_saved_window_btn         = document.getElementById("openSavedWindowBtn");
-const window_select_modal           = document.getElementById("windowSelectModal");
-const window_select_options         = document.getElementById("windowSelectOptionsContainer");
-const close_window_select_modal_btn = document.getElementById("closeWindowSelectModalBtn");
 
-// Elements for swapping windows (the current window with a saved window).
+// Elements for swapping the current window with a saved window.
 const swap_with_btn = document.getElementById("swapWithBtn");
 
-function openModal(modal) {
-  if (modal == null) return;
 
-  overlay.classList.add("active");
-  modal.classList.add("active");
-}
 
-function closeModal(modal) {
-  if (modal == null) return;
+/*** ADD HANDLERS TO BUTTONS ***/
 
-  modal.classList.remove("active");
-  overlay.classList.remove("active");
-}
+save_current_window_btn.addEventListener("click", handleSaveCurrentWindow);
+open_saved_window_btn.addEventListener("click", handleOpenSavedWindow);
+swap_with_btn.addEventListener("click", handleSwapWith);
 
-function waitForEnterKey() {
-  return new Promise((resolve) => {
-    function enterKeyHandler(event) {
-      if (event.code == "Enter") {
-        document.removeEventListener("keydown", enterKeyHandler);
-        resolve();
-      }
-    }
-    document.addEventListener("keydown", enterKeyHandler);
-  })
-}
 
-async function saveCurrentWindow() {
+
+/*** HANDLERS ***/
+
+/** Handler for 'save_current_window_btn'. */
+async function handleSaveCurrentWindow() {
   console.log("Saving window...");
 
+  // Get this window's current list of tabs to be saved to storage.
   const tabs     = await chrome.tabs.query({currentWindow: true});
   let   tab_urls = [];
 
@@ -77,12 +67,12 @@ async function saveCurrentWindow() {
 
     // Clear any previous input.
     input_textbox.value = "";
-    openModal(input_text_modal);
+    Helpers.openModal(input_text_modal);
     input_textbox.focus();
     // TODO: Add safety against duplicate window names.
-    await waitForEnterKey();
+    await Helpers.waitForEnterKey();
     let window_name = input_textbox.value;
-    closeModal(input_text_modal);
+    Helpers.closeModal(input_text_modal);
 
     // Map current window's ID to the saved window name.
     chrome.storage.sync.set({[current_window_id] : window_name});
@@ -97,47 +87,19 @@ async function saveCurrentWindow() {
   }
 }
 
-async function openSavedWindow() {
+/** Handler for 'open_saved_window_btn'. */
+async function handleOpenSavedWindow() {
   console.log("Opening saved window...");
 
   // Open a new window.
   const windows_data     = await chrome.storage.sync.get("windows");
   const windows_data_obj = windows_data.windows;
 
-  // Display saved windows and collect user selection.
-  let windows_list_options_html = "";
-  for (const window_name in windows_data_obj) {
-    windows_list_options_html += '<button class="window-select-option-btn"'
-                               + 'id="' + window_name + '">'
-                               + window_name + '</button>';
-  }
-  window_select_options.innerHTML = windows_list_options_html;
-
-  const window_option_btns = document.querySelectorAll(".window-select-option-btn");
-  console.log("There are " + window_option_btns.length + " windows in storage.");
-  for (const window_option_btn of window_option_btns) {
-    console.log("Adding event listener to " + window_option_btn.id + "...");
-    window_option_btn.addEventListener("click", async () => {
-      console.log(window_option_btn.id + " was clicked! :D");
-
-      closeModal(window_select_modal);
-
-      const window_name = window_option_btn.id;
-      const tab_urls    = windows_data_obj[window_name];
-      const new_window  = await chrome.windows.create({url:   tab_urls,
-                                                       state: "maximized"});
-
-      chrome.storage.sync.set({[new_window.id] : window_name});
-    });
-  }
-
-  openModal(window_select_modal);
-
-  // Map new window's ID to saved window's name.
-  // Populate new window with saved window tabs.
+  Helpers.activateWindowSelectModalWithOpenEditRemove();
 }
 
-function swapWith() {
+/** Handler for 'swap_with_btn'. */
+function handleSwapWith() {
   console.log("'swapWithBtn' was clicked...");
 
   // Allow user to pick which window out of the saved windows they have that
@@ -151,10 +113,3 @@ function swapWith() {
     //  be able to do its thing. Might have to open the new window and THEN
     //  close the current one.
 }
-
-close_window_select_modal_btn.addEventListener("click", () => {
-  closeModal(window_select_modal);
-});
-save_current_window_btn.addEventListener("click", saveCurrentWindow);
-open_saved_window_btn.addEventListener("click", openSavedWindow);
-swap_with_btn.addEventListener("click", swapWith);
