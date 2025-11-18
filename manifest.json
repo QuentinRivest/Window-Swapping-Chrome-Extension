@@ -9,7 +9,7 @@
   ],
   "action" : {
     "default_popup" : "pages/popup.html",
-    "default_icon" : "images/hi.png"
+    "default_icon" : "images/swap-icon.png"
   },
   "background" : {
     "service_worker" : "js/service-worker.js"
