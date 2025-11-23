@@ -43,16 +43,12 @@ swap_with_btn.addEventListener("click", handleSwapWith);
 
 // Handlers for buttons in window select options container.
 window_select_options.addEventListener("click", async (event) => {
-  if (event.target.matches(".window-open-btn")) {
-    // Add event listener for opening a saved window.
-
-    const window_open_btn = event.target;
-    const window_name     = window_open_btn.dataset.windowName;
+  if (event.target.matches(".window-open-btn")) {  // Add event listener for opening a saved window.
+    const window_open_btn  = event.target;
+    const window_name      = window_open_btn.dataset.windowName;
+    const windows_data_obj = (await chrome.storage.sync.get("windows")).windows;
 
     Helpers.closeModal(window_select_modal);
-
-    // Retrieve data again from storage so it's up-to-date.
-    const windows_data_obj = (await chrome.storage.sync.get("windows")).windows;
 
     const tab_urls   = windows_data_obj[window_name].tab_urls;
     const new_window = await chrome.windows.create(
@@ -64,17 +60,16 @@ window_select_options.addEventListener("click", async (event) => {
 
     // Update window data object in storage
     chrome.storage.sync.set({"windows" : windows_data_obj});
-  } else if (event.target.matches(".window-rename-btn")) {
-    // Add event listener for renaming a saved window.
-
+  } else if (event.target.matches(".window-rename-btn")) {  // Add event listener for renaming a saved window.
     const window_rename_btn = event.target;
     const old_window_name   = window_rename_btn.dataset.windowName;
+    const windows_data_obj  = (await chrome.storage.sync.get("windows")).windows;
 
     Helpers.closeModal(window_select_modal);
 
-    // Retrieve data again from storage so it's up-to-date.
-    const windows_data_obj = (await chrome.storage.sync.get("windows")).windows;
-    const new_window_name  = await Helpers.getValidWindowNameFromUser(windows_data_obj, old_window_name);
+    const new_window_name  = await Helpers.getValidWindowNameFromUser(
+      windows_data_obj, old_window_name
+    );
 
     // Return early if window name was null (i.e., the user gave the same name
     // as the one the window already had).
@@ -93,16 +88,12 @@ window_select_options.addEventListener("click", async (event) => {
 
     // Update window data object in storage.
     chrome.storage.sync.set({"windows" : windows_data_obj});
-  } else if (event.target.matches(".window-remove-btn")) {
-    // Add event listener for removing a saved window.
-
+  } else if (event.target.matches(".window-remove-btn")) {  // Add event listener for removing a saved window.
     const window_remove_btn = event.target;
     const window_name       = window_remove_btn.dataset.windowName;
+    const windows_data_obj  = (await chrome.storage.sync.get("windows")).windows;
 
     Helpers.closeModal(window_select_modal);
-
-    // Retrieve data again from storage so it's up-to-date.
-    const windows_data_obj = (await chrome.storage.sync.get("windows")).windows;
 
     const window_ids = windows_data_obj[window_name].window_ids;
     for (const window_id of window_ids) {
@@ -112,6 +103,38 @@ window_select_options.addEventListener("click", async (event) => {
     delete windows_data_obj[window_name];
 
     // Update windows data object in storage.
+    chrome.storage.sync.set({"windows" : windows_data_obj});
+  } else if (event.target.matches(".swap-option-btn")) {  // Add event listener for opening a saved window to swap with.
+    const window_open_btn   = event.target;
+    const window_name       = window_open_btn.dataset.windowName;
+    const current_window_id = (await chrome.windows.getCurrent()).id.toString();
+
+    Helpers.closeModal(window_select_modal);
+
+    // Return early if user selects the current window to swap with.
+    const data                = await chrome.storage.sync.get([current_window_id]);
+    const current_window_name = data[current_window_id];
+    if (current_window_name === window_name) {
+      console.log("swap with same");
+      return;
+    }
+
+    // Save or update the current window before closing it.
+    await saveOrUpdateCurrentWindow();
+
+    const windows_data_obj = (await chrome.storage.sync.get("windows")).windows;
+    const tab_urls         = windows_data_obj[window_name].tab_urls;
+
+    // Close current window and open selected window.
+    chrome.windows.remove(current_window_id);
+    const new_window = await chrome.windows.create(
+      {url: tab_urls, state: "maximized"}
+    );
+
+    windows_data_obj[window_name].window_ids.push(new_window.id);
+    chrome.storage.sync.set({[new_window.id] : window_name});
+
+    // Update window data object in storage
     chrome.storage.sync.set({"windows" : windows_data_obj});
   }
 });
@@ -150,7 +173,9 @@ async function saveOrUpdateCurrentWindow() {
   //  current window with the correct data (array of current tab URLs).
   if (saved_window_name === undefined) {  // Current window does NOT map to saved window.
     // Get user input from input modal for name of window.
-    const window_name = await Helpers.getValidWindowNameFromUser(windows_data_obj);
+    const window_name = await Helpers.getValidWindowNameFromUser(
+      windows_data_obj
+    );
 
     // Map current window's ID to the saved window name.
     chrome.storage.sync.set({[current_window_id] : window_name});
@@ -204,6 +229,22 @@ async function handleOpenSavedWindow() {
 }
 
 /** Handler for 'swap_with_btn'. */
-function handleSwapWith() {
+async function handleSwapWith() {
   console.log("'swapWithBtn' was clicked...");
+
+  // Update window_select_modal to the user's current list of saved windows.
+  const windows_data     = await chrome.storage.sync.get("windows");
+  const windows_data_obj = windows_data.windows;
+
+  // Add list of saved windows to HTML.
+  let windows_list_options_html = "";
+  for (const window_name in windows_data_obj) {
+    windows_list_options_html +=
+      `<button class="swap-option-btn" data-window-name="${window_name}">
+        ${window_name}
+      </button>`;
+  }
+  window_select_options.innerHTML = windows_list_options_html;
+
+  Helpers.openModal(window_select_modal);
 }

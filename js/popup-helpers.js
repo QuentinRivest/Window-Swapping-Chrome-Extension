@@ -8,10 +8,6 @@ const input_text_modal = document.getElementById("inputTextModal");
 const input_textbox    = document.getElementById("inputTextbox");
 const input_error_msg  = input_text_modal.querySelector(".input-error-msg");
 
-// Elements for when the user is selecting a window from their saved windows.
-const window_select_modal   = document.getElementById("windowSelectModal");
-const window_select_options = document.getElementById("windowSelectOptionsContainer");
-
 
 
 /*** EXPORTED HELPERS ***/
@@ -66,25 +62,6 @@ export async function getValidWindowNameFromUser(windows_data_obj,
   }
 
   return window_name;
-}
-
-/** Activates 'window_select_modal' with ONLY open options. */
-export async function activateWindowSelectModalWithOpen() {
-  // Update window_select_modal to the user's current list of saved windows.
-  const windows_data     = await chrome.storage.sync.get("windows");
-  const windows_data_obj = windows_data.windows;
-
-  // Add list of saved windows to HTML.
-  let windows_list_options_html = "";
-  for (const window_name in windows_data_obj) {
-    windows_list_options_html +=
-      `<button class="window-open-btn" data-window-name="${window_name}">
-        ${window_name}
-      </button>`;
-  }
-  window_select_options.innerHTML = windows_list_options_html;
-
-  openModal(window_select_modal);
 }
 
 
