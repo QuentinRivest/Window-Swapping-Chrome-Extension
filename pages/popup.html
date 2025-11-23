@@ -5,10 +5,11 @@
   <body>
     <div id="inputTextModal">
       <input
-        id="inputTextbox"
-        type="text"
-        placeholder="Enter window name"
+      id="inputTextbox"
+      type="text"
+      placeholder="Enter window name"
       >
+      <span class="input-error-msg"></span>
     </div>
     <div id="windowSelectModal">
       <div class="window-select-header">
@@ -24,16 +25,18 @@
         class="window-select-options-container"
         id="windowSelectOptionsContainer"
       >
-        <!-- dynamic column of buttons -->
+        <!-- dynamic column of divs with row of buttons -->
       </div>
     </div>
     <div id="overlay"></div>
     <div class="main-menu">
       <h1 class="header">Window Swapper</h1>
       <div class="menu-btns-container">
-        <button class="menu-btn" id="saveCurrentWindowBtn">Save</button>
-        <button class="menu-btn" id="openSavedWindowBtn">Open...</button>
         <button class="menu-btn" id="swapWithBtn">Swap With...</button>
+        <div class="save-and-open-btns-container">
+          <button class="menu-btn" id="saveCurrentWindowBtn">Save</button>
+          <button class="menu-btn" id="openSavedWindowBtn">Open...</button>
+        </div>
       </div>
     </div>
     <script type="module" src="../js/popup.js"></script>

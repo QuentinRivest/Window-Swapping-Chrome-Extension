@@ -7,6 +7,12 @@
     "storage",
     "tabs"
   ],
+  "icons" : {
+    "16" : "images/swap-icon.png",
+    "32" : "images/swap-icon.png",
+    "48" : "images/swap-icon.png",
+    "128" : "images/swap-icon.png"
+  },
   "action" : {
     "default_popup" : "pages/popup.html",
     "default_icon" : "images/swap-icon.png"

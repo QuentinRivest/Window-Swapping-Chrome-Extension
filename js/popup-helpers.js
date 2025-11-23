@@ -3,10 +3,14 @@
 // General.
 const overlay = document.getElementById("overlay");
 
+// Elements for input text box.
+const input_text_modal = document.getElementById("inputTextModal");
+const input_textbox    = document.getElementById("inputTextbox");
+const input_error_msg  = input_text_modal.querySelector(".input-error-msg");
+
 // Elements for when the user is selecting a window from their saved windows.
-const window_select_modal           = document.getElementById("windowSelectModal");
-const window_select_options         = document.getElementById("windowSelectOptionsContainer");
-const close_window_select_modal_btn = document.getElementById("closeWindowSelectModalBtn");
+const window_select_modal   = document.getElementById("windowSelectModal");
+const window_select_options = document.getElementById("windowSelectOptionsContainer");
 
 
 
@@ -28,8 +32,67 @@ export function closeModal(modal) {
   overlay.classList.remove("active");
 }
 
+/** Gets a valid window name from the user.
+  * If the user gives an invalid name, it loops until given a valid one.
+  */
+export async function getValidWindowNameFromUser(windows_data_obj,
+                                                 old_window_name=null) {
+  const unsafe_chars = ["\"", "&", "<", ">"];
+  let window_name    = "";
+  let error_msg      = "";
+  let input_is_valid = false;
+
+  while (!input_is_valid) {
+    window_name = await getUserInputWithTextbox(error_msg);
+
+    // If name is no different from
+    if (window_name === old_window_name) return null;
+
+    // Check for duplicates.
+    input_is_valid = !(window_name in windows_data_obj);
+
+    // If the name wasn't a duplicate, check for unsafe characters too.
+    if (input_is_valid) {
+      for (const ch of unsafe_chars) {
+        if (window_name.includes(ch)) {
+          input_is_valid = false;
+          error_msg = `Cannot contain [${ch}] character.`;
+          break;
+        }
+      }
+    } else {
+      error_msg = "Window name already exists; please choose another.";
+    }
+  }
+
+  return window_name;
+}
+
+/** Activates 'window_select_modal' with ONLY open options. */
+export async function activateWindowSelectModalWithOpen() {
+  // Update window_select_modal to the user's current list of saved windows.
+  const windows_data     = await chrome.storage.sync.get("windows");
+  const windows_data_obj = windows_data.windows;
+
+  // Add list of saved windows to HTML.
+  let windows_list_options_html = "";
+  for (const window_name in windows_data_obj) {
+    windows_list_options_html +=
+      `<button class="window-open-btn" data-window-name="${window_name}">
+        ${window_name}
+      </button>`;
+  }
+  window_select_options.innerHTML = windows_list_options_html;
+
+  openModal(window_select_modal);
+}
+
+
+
+/*** LOCAL HELPERS ***/
+
 /** Makes the program wait until the user hits enter. */
-export function waitForEnterKey() {
+function waitForEnterKey() {
   return new Promise((resolve) => {
     function enterKeyHandler(event) {
       if (event.code == "Enter") {
@@ -38,105 +101,25 @@ export function waitForEnterKey() {
       }
     }
     document.addEventListener("keydown", enterKeyHandler);
-  })
-}
-
-/** Activates 'window_select_modal' with ONLY open options. */
-async function activateWindowSelectModalWithOpen() {
-  // Update window_select_modal to the user's current list of saved windows.
-  const windows_data       = await chrome.storage.sync.get("windows");
-  const windows_data_obj   = windows_data.windows;
-
-  let windows_list_options_html = "";
-  for (const window_name in windows_data_obj) {
-    const escaped_window_name = convertToEscapedString(window_name);
-    windows_list_options_html += "<button class='window-select-option-btn'"
-    + "id='" + escaped_window_name + "'>"
-    + escaped_window_name + "</button>";
-  }
-  window_select_options.innerHTML = windows_list_options_html;
-
-  // Activate buttons with proper handlers to open their corresponding windows.
-  const window_option_btns = document.querySelectorAll(".window-select-option-btn");
-
-  console.log("There are " + window_option_btns.length + " windows in storage.");
-  for (const window_option_btn of window_option_btns) {
-    const window_name = convertToUnescapedString(window_option_btn.id);
-
-    console.log("Adding event listener to " + window_name + "...");
-    window_option_btn.addEventListener("click", async () => {
-      closeModal(window_select_modal);
-
-      // Open a new window, maximized, with the saved window's tabs.
-      const tab_urls   = windows_data_obj[window_name];
-      const new_window = await chrome.windows.create(
-        {url: tab_urls, state: "maximized"}
-      );
-
-      // Map this new window's ID to the saved window's name.
-      chrome.storage.sync.set({[new_window.id] : window_name});
-    });
-  }
-
-  close_window_select_modal_btn.addEventListener("click", () => {
-    closeModal(window_select_modal);
   });
-
-  openModal(window_select_modal);
 }
 
-// TODO: implement edit and remove functionality.
-/** Activates 'window_select_modal' with OPEN/EDIT/REMOVE options.
- * 'EDIT': rename the window. 'REMOVE': remove the window from storage.
-*/
-export function activateWindowSelectModalWithOpenEditRemove() {
-  // Placeholder:
-  activateWindowSelectModalWithOpen();
-  console.log("'activateWindowSelectModalWithEditAndRemove' function not yet implemented. :(");
-
-  // activateWindowSelectModalWithGivenHandler( /*...*/ );
-}
-
-
-
-/*** LOCAL HELPERS ***/
-
-/** Returns a version of the given string that's safe inside single AND double
-  * quotes.
-  * Escapes any quotes (' and ") and "\" characters.
-  */
-function convertToEscapedString(str) {
-  let escaped_str = "";
-
-  for (let i = 0; i < str.length; ++i) {
-    const ch = str[i];
-
-    if (ch == "'" || ch ==  '"' || ch == "\\") {
-      escaped_str += "\\";
-    }
-
-    escaped_str += ch;
+/** Returns user input from text box. */
+async function getUserInputWithTextbox(error_msg="") {
+  // Clear any previous input.
+  input_textbox.value = "";
+  if (error_msg.length > 0) {
+    input_error_msg.textContent = error_msg;
   }
+  openModal(input_text_modal);
+  input_textbox.focus();
 
-  return escaped_str;
-}
+  await waitForEnterKey();
+  const user_input_str = input_textbox.value;
 
-/** Returns the given string with any unescaped "\" characters removed.
-  * Undoes the affect of convertToEscapedString function.
-  */
-function convertToUnescapedString(str = "") {
-  let unescaped_str   = "";
-  let last_was_escape = false;
+  // Clear error message.
+  input_error_msg.textContent = "";
+  closeModal(input_text_modal);
 
-  for (let i = 0; i < str.length; ++i) {
-    const ch = str[i];
-
-    if (last_was_escape || ch != "\\") {
-      unescaped_str += ch;
-    } else {  // 'ch' is a unescaped "\" character.
-      last_was_escape = true;
-    }
-  }
-
-  return unescaped_str;
+  return user_input_str;
 }
