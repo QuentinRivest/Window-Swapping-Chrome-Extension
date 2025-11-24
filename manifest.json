@@ -1,6 +1,6 @@
 {
   "name" : "Window Swapper",
-  "description" : "A Chrome Extension that can swap your current window with other windows you have saved.",
+  "description" : "A Chrome Extension for saving and managing your browser windows, and even swapping your current window for one you have saved.",
   "version" : "1.0",
   "manifest_version" : 3,
   "permissions" : [
