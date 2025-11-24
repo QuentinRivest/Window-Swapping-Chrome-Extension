@@ -37,7 +37,7 @@ h1 {
 }
 
 .save-and-open-btns-container button {
-  flex-grow: 1;
+  width: 50%;
 }
 
 .menu-btn {
@@ -50,6 +50,11 @@ h1 {
   background-color: #00224B;
 }
 
+#swapWithBtn {
+  padding-top: 3px;
+  font-size: large;
+}
+
 #inputTextModal {
   display: flex;
   flex-direction: column;
@@ -59,7 +64,7 @@ h1 {
   transform: scale(0);
   transition: 200ms ease-in-out;
   border: none;
-  z-index: 10;
+  z-index: 3;
 }
 
 #inputTextModal.active {
@@ -76,6 +81,52 @@ h1 {
   background-color: crimson;
 }
 
+#userConfirmationModal {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  width: 90%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: 200ms ease-in-out;
+  margin: 0 auto;
+  padding: 5px;
+  gap: 6px;
+  background-color: lightslategray;
+  border: none;
+  border-radius: 6px;
+  z-index: 4;
+}
+
+#userConfirmationModal.active {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+#confirmationBtnsContainer {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 6px;
+}
+
+#confirmationBtnsContainer button {
+  width: 50%;
+  margin: 0;
+  color: whitesmoke;
+  font-weight: bold;
+  border-color: black;
+  border-radius: 4px;
+}
+
+.yes-confirmation-btn {
+  background-color: crimson;
+}
+
+.no-confirmation-btn {
+  background: none;
+}
+
 #windowSelectModal {
   display: flex;
   flex-direction: column;
@@ -88,7 +139,7 @@ h1 {
   overflow: hidden;
   overflow-y: auto;
   scrollbar-width: none;
-  z-index: 10;
+  z-index: 1;
 }
 
 #windowSelectModal.active {
@@ -160,6 +211,13 @@ h1 {
   background-color: firebrick;
 }
 
+.swap-option-btn {
+  border: none;
+  text-align: left;
+  color: #00224B;
+  background-color: whitesmoke;
+}
+
 #overlay {
   position: fixed;
   opacity: 0;
@@ -170,6 +228,7 @@ h1 {
   right: 0;
   background-color: rgba(0, 0, 0, 0.5);
   pointer-events: none;
+  z-index: 2;
 }
 
 #overlay.active {

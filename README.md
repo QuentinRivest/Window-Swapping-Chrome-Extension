@@ -1,8 +1,7 @@
 # Window-Swapper Chrome Extension
 
-### A Chrome Extension that can swap your current window with other windows you have saved.
+This is a Chrome Extension that allows you to save browser windows, open your saved windows when you choose, and swap your current window with a window from your saved windows (this last feature being the namesake of the extension). It should be noted that swapping a window will automatically save the state of the current window.
 
-Making this because my laptop is kind of old and likes to crash if I have too many windows with too many tabs open, haha.
+"Saving a window" refers to the extension saving the ordered list of tabs open in the window at the moment it's being saved.
 
-So basically, if you have one or more window(s) (i.e., a collection of tabs) saved to this chrome extension, then you can decide to swap the current window with one of those saved windows.
-Swapping with the current window makes that current window a saved window automatically (no need to manually save it -- that'd be annoying, lol).
+Saved windows are identified by names that the user gives to them the first time they're saved. Window renaming and removal is supported in the list of saved windows displayed through use of the 'Open...' button.
